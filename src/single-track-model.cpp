@@ -44,17 +44,8 @@ void SingleTrackModel::setRightWheelSpeed(opendlv::proxy::RightWheelSpeedRequest
 }
 
 opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
-{ 
-  
-  double const pedalSpeedGain{0.5};
-
-  double const mass{1.0};
-  double const momentOfInertiaZ{0.1};
-  double const length{0.22};
-  double const frontToCog{0.11};
-  double const rearToCog{length - frontToCog};
-  double const corneringStiffnessFront{1.0};
-  double const corneringStiffnessRear{1.0};
+{  
+  double const radius{0.12};
   
   float leftWheelSpeedCopy;
   float rightWheelSpeedCopy;
@@ -64,7 +55,6 @@ opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
     leftWheelSpeedCopy = m_groundSteeringAngle;
     rightWheelSpeedCopy = m_pedalPosition;
   }
-  double const radius = 0.12;
   double const yawRateDot = (rightWheelSpeedCopy-leftWheelSpeedCopy)/2/radius;
   m_yawRate += yawRateDot * dt;
   double const speed = (rightWheelSpeedCopy+leftWheelSpeedCopy)/2;
