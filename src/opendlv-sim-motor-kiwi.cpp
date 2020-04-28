@@ -36,6 +36,14 @@ int32_t main(int32_t argc, char **argv) {
     
     SingleTrackModel singleTrackModel;
 
+    auto onWheelSpeedRequest{[&FRAME_ID, &singleTrackModel](cluon::data::Envelope &&envelope)
+      {
+        uint32_t const senderStamp = envelope.senderStamp();
+        if (FRAME_ID == senderStamp) {
+          auto wheelSpeedRequest = cluon::extractMessage<opendlv::proxy::WheelSpeedRequest>(std::move(envelope));
+          singleTrackModel.setWheelSpeed(wheelSpeedRequest);
+        }
+      }};
     auto onGroundSteeringRequest{[&FRAME_ID, &singleTrackModel](cluon::data::Envelope &&envelope)
       {
         uint32_t const senderStamp = envelope.senderStamp();
@@ -56,7 +64,8 @@ int32_t main(int32_t argc, char **argv) {
     cluon::OD4Session od4{CID};
     od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
     od4.dataTrigger(opendlv::proxy::PedalPositionRequest::ID(), onPedalPositionRequest);
-
+    od4.dataTrigger(opendlv::proxy::WheelSpeedRequest::ID(), onWheelSpeedRequest);
+    
     auto atFrequency{[&FRAME_ID, &VERBOSE, &DT, &singleTrackModel, &od4]() -> bool
       {
         opendlv::sim::KinematicState kinematicState = singleTrackModel.step(DT);
