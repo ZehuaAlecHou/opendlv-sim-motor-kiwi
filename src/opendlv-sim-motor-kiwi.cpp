@@ -17,7 +17,7 @@
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
-#include "single-track-model.hpp"
+#include "differentially-steered-model.hpp"
 
 int32_t main(int32_t argc, char **argv) {
   int32_t retCode{0};
@@ -34,27 +34,27 @@ int32_t main(int32_t argc, char **argv) {
     float const FREQ = std::stof(commandlineArguments["freq"]);
     double const DT = 1.0 / FREQ;
     
-    SingleTrackModel singleTrackModel;
+    DifferentiallySteeredModel differentiallySteeredModel;
 
     auto onWheelSpeedRequest{[&differentiallySteeredModel](cluon::data::Envelope &&envelope)
       {
         uint32_t const senderStamp = envelope.senderStamp();
         if (senderStamp == 0) {
           auto leftWheelSpeedRequest = cluon::extractMessage<opendlv::proxy::LeftWheelSpeedRequest>(std::move(envelope));
-          singleTrackModel.setLeftWheelSpeed(leftWheelSpeedRequest);
+          differentiallySteeredModel.setLeftWheelSpeed(leftWheelSpeedRequest);
          }
         else if (senderStamp == 1) {
           auto rightWheelSpeedRequest = cluon::extractMessage<opendlv::proxy::RightWheelSpeedRequest>(std::move(envelope));
-          singleTrackModel.setRightWheelSpeed(rightWheelSpeedRequest);
+          differentiallySteeredModel.setRightWheelSpeed(rightWheelSpeedRequest);
          }
       }};
    
     cluon::OD4Session od4{CID};
     od4.dataTrigger(opendlv::proxy::WheelSpeedRequest::ID(), onWheelSpeedRequest);
     
-    auto atFrequency{[&FRAME_ID, &VERBOSE, &DT, &singleTrackModel, &od4]() -> bool
+    auto atFrequency{[&FRAME_ID, &VERBOSE, &DT, &differentiallySteeredModel, &od4]() -> bool
       {
-        opendlv::sim::KinematicState kinematicState = singleTrackModel.step(DT);
+        opendlv::sim::KinematicState kinematicState = differentiallySteeredModel.step(DT);
 
         cluon::data::TimeStamp sampleTime = cluon::time::now();
         od4.send(kinematicState, sampleTime, FRAME_ID);
