@@ -18,9 +18,9 @@
 #include <cmath>
 #include <iostream>
 
-#include "single-track-model.hpp"
+#include "differentially-steered-model.hpp"
 
-SingleTrackModel::SingleTrackModel() noexcept:
+DifferentiallySteeredModel::DifferentiallySteeredModel() noexcept:
   m_leftWheelSpeedMutex{},
   m_rightWheelSpeedMutex{},
   m_longitudinalSpeed{0.0f},
@@ -31,19 +31,19 @@ SingleTrackModel::SingleTrackModel() noexcept:
 {
 }
 
-void SingleTrackModel::setLeftWheelSpeed(opendlv::proxy::LeftWheelSpeedRequest const &leftWheelSpeed) noexcept
+void DifferentiallySteeredModel::setLeftWheelSpeed(opendlv::proxy::LeftWheelSpeedRequest const &leftWheelSpeed) noexcept
 {
   std::lock_guard<std::mutex> lock(m_leftWheelSpeedMutex);
   m_leftWheelSpeed = leftWheelSpeed.speed();
 }
 
-void SingleTrackModel::setRightWheelSpeed(opendlv::proxy::RightWheelSpeedRequest const &rightWheelSpeed) noexcept
+void DifferentiallySteeredModel::setRightWheelSpeed(opendlv::proxy::RightWheelSpeedRequest const &rightWheelSpeed) noexcept
 {
   std::lock_guard<std::mutex> lock(m_rightWheelSpeedMutex);
   m_rightWheelSpeed = rightWheelSpeed.speed();
 }
 
-opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
+opendlv::sim::KinematicState DifferentiallySteeredModel::step(double dt) noexcept
 {  
   double const radius{0.12};
   
