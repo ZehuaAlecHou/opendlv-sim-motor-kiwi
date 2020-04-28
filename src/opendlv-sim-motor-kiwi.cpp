@@ -36,34 +36,20 @@ int32_t main(int32_t argc, char **argv) {
     
     SingleTrackModel singleTrackModel;
 
-    auto onWheelSpeedRequest{[&FRAME_ID, &singleTrackModel](cluon::data::Envelope &&envelope)
+    auto onWheelSpeedRequest{[&differentiallySteeredModel](cluon::data::Envelope &&envelope)
       {
         uint32_t const senderStamp = envelope.senderStamp();
-        if (FRAME_ID == senderStamp) {
-          auto wheelSpeedRequest = cluon::extractMessage<opendlv::proxy::WheelSpeedRequest>(std::move(envelope));
-          singleTrackModel.setWheelSpeed(wheelSpeedRequest);
-        }
+        if (senderStamp == 0) {
+          auto leftWheelSpeedRequest = cluon::extractMessage<opendlv::proxy::LeftWheelSpeedRequest>(std::move(envelope));
+          singleTrackModel.setLeftWheelSpeed(leftWheelSpeedRequest);
+         }
+        else if (senderStamp == 1) {
+          auto rightWheelSpeedRequest = cluon::extractMessage<opendlv::proxy::RightWheelSpeedRequest>(std::move(envelope));
+          singleTrackModel.setRightWheelSpeed(rightWheelSpeedRequest);
+         }
       }};
-    auto onGroundSteeringRequest{[&FRAME_ID, &singleTrackModel](cluon::data::Envelope &&envelope)
-      {
-        uint32_t const senderStamp = envelope.senderStamp();
-        if (FRAME_ID == senderStamp) {
-          auto groundSteeringAngleRequest = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(envelope));
-          singleTrackModel.setGroundSteeringAngle(groundSteeringAngleRequest);
-        }
-      }};
-    auto onPedalPositionRequest{[&FRAME_ID, &singleTrackModel](cluon::data::Envelope &&envelope)
-      {
-        uint32_t const senderStamp = envelope.senderStamp();
-        if (FRAME_ID == senderStamp) {
-          auto pedalPositionRequest = cluon::extractMessage<opendlv::proxy::PedalPositionRequest>(std::move(envelope));
-          singleTrackModel.setPedalPosition(pedalPositionRequest);
-        }
-      }};
-
+   
     cluon::OD4Session od4{CID};
-    od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
-    od4.dataTrigger(opendlv::proxy::PedalPositionRequest::ID(), onPedalPositionRequest);
     od4.dataTrigger(opendlv::proxy::WheelSpeedRequest::ID(), onWheelSpeedRequest);
     
     auto atFrequency{[&FRAME_ID, &VERBOSE, &DT, &singleTrackModel, &od4]() -> bool
