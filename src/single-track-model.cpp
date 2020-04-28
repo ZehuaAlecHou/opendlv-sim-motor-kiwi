@@ -21,30 +21,31 @@
 #include "single-track-model.hpp"
 
 SingleTrackModel::SingleTrackModel() noexcept:
-  m_groundSteeringAngleMutex{},
-  m_pedalPositionMutex{},
+  m_leftWheelSpeedMutex{},
+  m_rightWheelSpeedMutex{},
   m_longitudinalSpeed{0.0f},
   m_lateralSpeed{0.0f},
   m_yawRate{0.0f},
-  m_groundSteeringAngle{0.0f},
-  m_pedalPosition{0.0f}
+  m_leftWheelSpeed{0.0f},
+  m_rightWheelSpeed{0.0f}
 {
 }
 
-void SingleTrackModel::setGroundSteeringAngle(opendlv::proxy::GroundSteeringRequest const &groundSteeringAngle) noexcept
+void SingleTrackModel::setLeftWheelSpeed(opendlv::proxy::LeftWheelSpeedRequest const &leftWheelSpeed) noexcept
 {
-  std::lock_guard<std::mutex> lock(m_groundSteeringAngleMutex);
-  m_groundSteeringAngle = groundSteeringAngle.groundSteering();
+  std::lock_guard<std::mutex> lock(m_leftWheelSpeedMutex);
+  m_leftWheelSpeed = leftWheelSpeed.speed();
 }
 
-void SingleTrackModel::setPedalPosition(opendlv::proxy::PedalPositionRequest const &pedalPosition) noexcept
+void SingleTrackModel::setRightWheelSpeed(opendlv::proxy::RightWheelSpeedRequest const &rightWheelSpeed) noexcept
 {
-  std::lock_guard<std::mutex> lock(m_pedalPositionMutex);
-  m_pedalPosition = pedalPosition.position();
+  std::lock_guard<std::mutex> lock(m_rightWheelSpeedMutex);
+  m_rightWheelSpeed = rightWheelSpeed.speed();
 }
 
 opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
-{
+{ 
+  
   double const pedalSpeedGain{0.5};
 
   double const mass{1.0};
@@ -55,38 +56,22 @@ opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
   double const corneringStiffnessFront{1.0};
   double const corneringStiffnessRear{1.0};
   
-  float groundSteeringAngleCopy;
-  float pedalPositionCopy;
+  float leftWheelSpeedCopy;
+  float rightWheelSpeedCopy;
   {
-    std::lock_guard<std::mutex> lock1(m_groundSteeringAngleMutex);
-    std::lock_guard<std::mutex> lock2(m_pedalPositionMutex);
-    groundSteeringAngleCopy = m_groundSteeringAngle;
-    pedalPositionCopy = m_pedalPosition;
+    std::lock_guard<std::mutex> lock1(m_leftWheelSpeedMutex);
+    std::lock_guard<std::mutex> lock2(m_rightWheelSpeedMutex);
+    leftWheelSpeedCopy = m_groundSteeringAngle;
+    rightWheelSpeedCopy = m_pedalPosition;
   }
-
-  m_longitudinalSpeed = pedalPositionCopy * pedalSpeedGain;
-
-  if (std::abs(m_longitudinalSpeed) > 0.01f) {
-    double const slipAngleFront = groundSteeringAngleCopy 
-      - (m_lateralSpeed + frontToCog * m_yawRate) 
-      / std::abs(m_longitudinalSpeed);
-    double const slipAngleRear = (rearToCog * m_yawRate - m_lateralSpeed) 
-      / std::abs(m_longitudinalSpeed);
-
-    double const lateralSpeedDot = (corneringStiffnessFront * slipAngleFront 
-        + corneringStiffnessRear * slipAngleRear)
-      / (mass - m_longitudinalSpeed * m_yawRate);
-
-    double const yawRateDot = (frontToCog * corneringStiffnessFront * slipAngleFront 
-        - rearToCog * corneringStiffnessRear * slipAngleRear)
-      / momentOfInertiaZ;
-    
-    m_lateralSpeed += lateralSpeedDot * dt;
-    m_yawRate += yawRateDot * dt;
-  } else {
-    m_lateralSpeed = 0.0f;
-    m_yawRate = 0.0f;
-  }
+  double const radius = 0.12;
+  double const yawRateDot = (rightWheelSpeedCopy-leftWheelSpeedCopy)/2/radius;
+  m_yawRate += yawRateDot * dt;
+  double const speed = (rightWheelSpeedCopy+leftWheelSpeedCopy)/2;
+  double const longitudinalSpeedDot = speed*cos(m_yawRate);
+  double const lateralSpeedDot = speed*sin(m_yawRate);
+  m_longitudinalSpeed += longitudinalSpeedDot * dt;
+  m_lateralSpeed += lateralSpeedDot * dt;
 
   opendlv::sim::KinematicState kinematicState;
   kinematicState.vx(static_cast<float>(m_longitudinalSpeed));
