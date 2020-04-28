@@ -52,8 +52,8 @@ opendlv::sim::KinematicState SingleTrackModel::step(double dt) noexcept
   {
     std::lock_guard<std::mutex> lock1(m_leftWheelSpeedMutex);
     std::lock_guard<std::mutex> lock2(m_rightWheelSpeedMutex);
-    leftWheelSpeedCopy = m_groundSteeringAngle;
-    rightWheelSpeedCopy = m_pedalPosition;
+    leftWheelSpeedCopy = m_leftWheelSpeed;
+    rightWheelSpeedCopy = m_rightWheelSpeed;
   }
   double const yawRateDot = (rightWheelSpeedCopy-leftWheelSpeedCopy)/2/radius;
   m_yawRate += yawRateDot * dt;
