@@ -55,13 +55,10 @@ opendlv::sim::KinematicState DifferentiallySteeredModel::step(double dt) noexcep
     leftWheelSpeedCopy = m_leftWheelSpeed;
     rightWheelSpeedCopy = m_rightWheelSpeed;
   }
-  double const yawRateDot = (rightWheelSpeedCopy-leftWheelSpeedCopy)/2/radius;
-  m_yawRate += yawRateDot * dt;
-  double const speed = (rightWheelSpeedCopy+leftWheelSpeedCopy)/2;
-  double const longitudinalSpeedDot = speed*cos(m_yawRate);
-  double const lateralSpeedDot = speed*sin(m_yawRate);
-  m_longitudinalSpeed += longitudinalSpeedDot * dt;
-  m_lateralSpeed += lateralSpeedDot * dt;
+  
+  m_longitudinalSpeed = (rightWheelSpeedCopy+leftWheelSpeedCopy)/2;
+  m_lateralSpeed = 0;
+  m_yaw_rate = (rightWheelSpeedCopy-leftWheelSpeedCopy)/2/radius;
 
   opendlv::sim::KinematicState kinematicState;
   kinematicState.vx(static_cast<float>(m_longitudinalSpeed));
