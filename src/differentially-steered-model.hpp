@@ -15,23 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SINGLE_TRACK_MODEL
-#define SINGLE_TRACK_MODEL
+#ifndef DIFFERENTIALLY-STEERED-MODEL
+#define DIFFERENTIALLY-STEERED-MODEL 
 
 #include <mutex>
 
 #include "opendlv-standard-message-set.hpp"
 
-class SingleTrackModel {
+class DifferentiallySteeredModel {
  private:
-  SingleTrackModel(SingleTrackModel const &) = delete;
-  SingleTrackModel(SingleTrackModel &&) = delete;
-  SingleTrackModel &operator=(SingleTrackModel const &) = delete;
-  SingleTrackModel &operator=(SingleTrackModel &&) = delete;
+  DifferentiallySteeredModel(DifferentiallySteeredModel const &) = delete;
+  DifferentiallySteeredModel(DifferentiallySteeredModel &&) = delete;
+  DifferentiallySteeredModel &operator=(DifferentiallySteeredModel const &) = delete;
+  DifferentiallySteeredModel &operator=(DifferentiallySteeredModel &&) = delete;
 
  public:
-  SingleTrackModel() noexcept;
-  ~SingleTrackModel() = default;
+  DifferentiallySteeredModel() noexcept;
+  ~DifferentiallySteeredModel() = default;
 
  public:
   void setLeftWheelSpeed(opendlv::proxy::LeftWheelSpeedRequest const &) noexcept;
